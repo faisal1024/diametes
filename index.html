@@ -1,129 +1,1415 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DIAMETES</title>
-<style>
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(180deg,#0c1324,#121c36);
-  color: white;
-}
-header {
-  padding: 20px;
-  font-size: 28px;
-  font-weight: bold;
-}
-header span.light {
-  color: #5cc8ff;
-}
-section {
-  min-height: 100vh;
-  padding: 20px;
-}
-.card {
-  background: rgba(255,255,255,0.05);
-  border-radius: 18px;
-  padding: 16px;
-  margin-bottom: 20px;
-}
-.nav {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  display: flex;
-  justify-content: space-around;
-  background: #0b1220;
-  padding: 12px 0;
-}
-.nav button {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 14px;
-}
-.hidden {
-  display: none;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DIAMETES Prototype</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root{
+      --bg0:#050b13;
+      --bg1:#071625;
+      --bg2:#06101c;
+
+      --panel: rgba(13, 28, 44, 0.78);
+      --panel2: rgba(9, 22, 36, 0.65);
+      --stroke: rgba(255,255,255,.09);
+      --stroke2: rgba(130,170,210,.18);
+
+      --text:#eaf2ff;
+      --muted:#b6cbe4;
+      --muted2:#86a7c9;
+
+      --accent:#69a7ff;     /* main blue */
+      --accentSoft:#9cc6ff; /* lighter for ME */
+      --teal:#7be8d4;
+      --warn:#ffbf7d;
+      --risk:#ff7e93;
+
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --r16: 16px;
+      --r20: 20px;
+    }
+
+    *{ box-sizing: border-box; }
+    html, body{ height: 100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 18% 8%, rgba(105,167,255,.22), transparent 58%),
+        radial-gradient(700px 480px at 82% 14%, rgba(123,232,212,.12), transparent 56%),
+        radial-gradient(900px 620px at 50% 110%, rgba(255,191,125,.08), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+    }
+
+    /* App frame */
+    .app{
+      max-width: 440px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display:flex;
+      flex-direction:column;
+      border-left: 1px solid rgba(255,255,255,.05);
+      border-right: 1px solid rgba(255,255,255,.05);
+      background: rgba(5,11,19,.18);
+      backdrop-filter: blur(10px);
+    }
+
+    /* Header */
+    header{
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      padding: 16px 16px 12px 16px;
+      background:
+        linear-gradient(180deg, rgba(5,11,19,.94), rgba(5,11,19,.72) 55%, rgba(5,11,19,.05));
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      backdrop-filter: blur(12px);
+    }
+
+    .headerRow{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .brandName{
+      font-weight: 900;
+      letter-spacing: .14em;
+      font-size: 22px;
+      line-height: 1;
+    }
+    .brandName .dia{ color: var(--text); }
+    .brandName .me{ color: var(--accentSoft); }
+    .brandName .tes{ color: var(--text); }
+
+    .tagline{
+      color: var(--muted2);
+      font-size: 12px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .statusChip{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:6px;
+      min-width: 140px;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(13,28,44,.55);
+      border: 1px solid rgba(255,255,255,.10);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .dot{
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 0 4px rgba(123,232,212,.14);
+    }
+
+    .subChip{
+      font-size: 11px;
+      color: rgba(182,203,228,.85);
+      letter-spacing:.08em;
+    }
+
+    /* Screens */
+    .screen{
+      display:none;
+      padding: 14px 14px 20px 14px;
+    }
+    .screen.active{ display:block; }
+
+    /* Force “screen-like” feel but allow vertical scroll */
+    .screenScroll{
+      min-height: calc(100vh - 86px); /* header+nav approximated; safe */
+      padding-bottom: 88px; /* room for nav */
+    }
+
+    /* Bottom nav (always visible without position tricks) */
+    nav{
+      position: sticky;
+      bottom: 0;
+      z-index: 6;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding: 12px 12px 14px 12px;
+      background:
+        linear-gradient(180deg, rgba(5,11,19,.08), rgba(5,11,19,.82) 30%, rgba(5,11,19,.96));
+      border-top: 1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(12px);
+    }
+
+    .navBtn{
+      flex:1;
+      text-align:center;
+      padding: 10px 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(13,28,44,.28);
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .06em;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+    }
+    .navBtn:hover{ transform: translateY(-1px); }
+    .navBtn.active{
+      background: rgba(13,28,44,.70);
+      border-color: rgba(105,167,255,.28);
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    /* Components */
+    .sectionLabel{
+      margin: 14px 6px 10px 6px;
+      color: var(--muted2);
+      font-size: 12px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .card{
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: var(--r20);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 12px;
+      overflow:hidden;
+    }
+
+    .card.soft{
+      background: var(--panel2);
+      border-color: rgba(255,255,255,.08);
+      box-shadow: none;
+    }
+
+    .cardHeader{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom: 10px;
+    }
+    .cardHeader h3{
+      margin:0;
+      font-size: 14px;
+      letter-spacing:.02em;
+    }
+    .hint{
+      color: var(--muted2);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .bigNumber{
+      font-size: 38px;
+      font-weight: 950;
+      letter-spacing: .01em;
+      line-height: 1;
+    }
+    .unit{
+      font-size: 12px;
+      color: var(--muted2);
+      font-weight: 800;
+      letter-spacing:.12em;
+      text-transform: uppercase;
+    }
+
+    .row{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .kpiGrid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+      margin-top: 10px;
+    }
+
+    .kpi{
+      background: rgba(5,11,19,.22);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding: 10px;
+      min-height: 78px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+    .kpi .label{
+      font-size: 11px;
+      color: var(--muted2);
+      letter-spacing:.12em;
+      text-transform: uppercase;
+    }
+    .kpi .value{
+      font-size: 16px;
+      font-weight: 900;
+    }
+    .kpi .sub{
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(5,11,19,.22);
+      border: 1px solid rgba(255,255,255,.10);
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 10px;
+      flex-wrap:wrap;
+    }
+
+    .btnRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 10px;
+    }
+    .btn{
+      flex:1;
+      min-width: 110px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(5,11,19,.22);
+      color: var(--text);
+      font-weight: 900;
+      letter-spacing:.02em;
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: rgba(105,167,255,.30); background: rgba(13,28,44,.55); }
+    .btn.primary{ background: rgba(105,167,255,.16); border-color: rgba(105,167,255,.32); }
+    .btn.danger{ background: rgba(255,126,147,.14); border-color: rgba(255,126,147,.26); }
+
+    .drawer{
+      display:none;
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(5,11,19,.22);
+    }
+    .drawer.show{ display:block; }
+
+    .tiny{
+      font-size: 11px;
+      color: rgba(182,203,228,.85);
+      line-height: 1.45;
+    }
+    .subtle{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .chartWrap{
+      background: rgba(5,11,19,.20);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding: 10px;
+    }
+    canvas{ width:100% !important; height: 260px !important; }
+    .mini canvas{ height: 150px !important; }
+    .tall canvas{ height: 300px !important; }
+
+    .vitalGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:10px;
+      margin-top: 10px;
+    }
+    .vital{
+      background: rgba(5,11,19,.22);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding: 10px;
+      min-height: 90px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+    .vital .t{
+      font-size: 11px;
+      color: var(--muted2);
+      letter-spacing:.12em;
+      text-transform: uppercase;
+    }
+    .vital .v{
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .vital .s{
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .list{ display:flex; flex-direction:column; gap:10px; }
+    .item{
+      background: rgba(5,11,19,.20);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding: 12px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .item .left{ display:flex; flex-direction:column; gap:6px; }
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size: 11px;
+      color: var(--muted2);
+      letter-spacing:.10em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,.08);
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(13,28,44,.30);
+      width: fit-content;
+    }
+    .item b{ font-size: 13px; }
+    .item .right{
+      min-width: 110px;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:6px;
+      text-align:right;
+    }
+    .item .right .big{
+      font-weight: 950;
+      font-size: 14px;
+    }
+
+    .input{
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(5,11,19,.22);
+      padding: 12px;
+      color: var(--text);
+      outline:none;
+      font-size: 14px;
+    }
+    .input::placeholder{ color: rgba(182,203,228,.65); }
+
+    /* Food scan preview */
+    .scanBox{
+      height: 190px;
+      border-radius: 18px;
+      border: 1px dashed rgba(255,255,255,.18);
+      background:
+        radial-gradient(900px 260px at 20% 30%, rgba(105,167,255,.16), transparent 60%),
+        radial-gradient(700px 260px at 85% 40%, rgba(123,232,212,.10), transparent 65%),
+        rgba(5,11,19,.18);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: rgba(182,203,228,.82);
+      letter-spacing:.08em;
+      margin-top: 10px;
+    }
+  </style>
 </head>
+
 <body>
+  <div class="app">
+    <header>
+      <div class="headerRow">
+        <div class="brand">
+          <div class="brandName">
+            <span class="dia">DIA</span><span class="me">ME</span><span class="tes">TES</span>
+          </div>
+          <div class="tagline">Back in Control</div>
+        </div>
 
-<header>
-DIA<span class="light">ME</span>TES
-</header>
+        <div class="statusChip">
+          <div class="chip"><span class="dot"></span> Demo Profile · Age 16</div>
+          <div class="subChip">US units · mg/dL · teen-focused</div>
+        </div>
+      </div>
+    </header>
 
-<section id="dashboard">
-<div class="card">
-<h2>Glucose</h2>
-<p>Current: 118 mg/dL</p>
-<p>Trend: Stable</p>
-<p>Hypoglycemia Risk: Low</p>
-</div>
+    <!-- DASHBOARD -->
+    <section id="scr-dashboard" class="screen active screenScroll">
+      <div class="card" style="background:
+        radial-gradient(900px 260px at 18% 20%, rgba(105,167,255,.20), transparent 60%),
+        radial-gradient(700px 260px at 82% 20%, rgba(123,232,212,.10), transparent 62%),
+        linear-gradient(180deg, rgba(13,28,44,.86), rgba(13,28,44,.62));
+      ">
+        <div class="cardHeader">
+          <h3>Current Glucose</h3>
+          <div class="hint">Target 70–180</div>
+        </div>
 
-<div class="card">
-<h2>Decision Support</h2>
-<p>Recommendation: Monitor, no correction needed.</p>
-<button>Approve</button>
-<button>Explain</button>
-<button>Decline</button>
-</div>
-</section>
+        <div class="bigNumber">142 <span class="unit">mg/dl</span></div>
+        <div class="pill">
+          Trend: rising mildly · +12 / 30m · slope moderate
+          <span style="color:var(--muted2);font-weight:800;">·</span>
+          Safety mode: High
+        </div>
 
-<section id="insights" class="hidden">
-<div class="card">
-<h2>7-Day Trend</h2>
-<p>Average: 121 mg/dL</p>
-</div>
-<div class="card">
-<h2>Sleep vs Glucose</h2>
-<p>Correlation detected: +12 mg/dL after poor sleep</p>
-</div>
-</section>
+        <div class="kpiGrid">
+          <div class="kpi">
+            <div class="label">Time In Range</div>
+            <div class="value">71%</div>
+            <div class="sub">7d avg · +3%</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Hypo Risk</div>
+            <div class="value">Low</div>
+            <div class="sub">Next 2h: 8%</div>
+          </div>
+          <div class="kpi">
+            <div class="label">IOB</div>
+            <div class="value">0.8u</div>
+            <div class="sub">last bolus 55m</div>
+          </div>
+        </div>
+      </div>
 
-<section id="food" class="hidden">
-<div class="card">
-<h2>Food Intelligence</h2>
-<p>Scan or Search Food</p>
-<p>Predicted Impact: Moderate rise</p>
-</div>
-</section>
+      <div class="sectionLabel">Decision Support</div>
+      <div class="card">
+        <div class="cardHeader">
+          <h3>Pasteur Recommendation</h3>
+          <div class="hint">Explainable · user-controlled</div>
+        </div>
 
-<section id="activity" class="hidden">
-<div class="card">
-<h2>Activity Log</h2>
-<p>Steps: 12,432</p>
-<p>Sleep: 7.2 hrs</p>
-<p>Carbs: 184g</p>
-</div>
-</section>
+        <div class="subtle">
+          Suggested action: <b>Hold correction</b> and re-check in <b>15 minutes</b>.
+          Consider a small correction only if glucose continues rising and meal carbs are confirmed.
+        </div>
 
-<section id="profile" class="hidden">
-<div class="card">
-<h2>Profile</h2>
-<p>Age: 15</p>
-<p>Weight: 118 lbs</p>
-<p>Target Range: 80–150 mg/dL</p>
-</div>
-</section>
+        <div class="pill">
+          Confidence 0.81 · Reasoning uses: CGM trend, IOB, sleep, activity, meal certainty, prior lows
+        </div>
 
-<div class="nav">
-<button onclick="showTab('dashboard')">Dashboard</button>
-<button onclick="showTab('insights')">Insights</button>
-<button onclick="showTab('food')">Food</button>
-<button onclick="showTab('activity')">Activity</button>
-<button onclick="showTab('profile')">Profile</button>
-</div>
+        <div class="btnRow">
+          <button class="btn primary" onclick="logDecision('Approved')">Approve</button>
+          <button class="btn" onclick="toggle('drawer-explain')">Explain</button>
+          <button class="btn danger" onclick="logDecision('Declined')">Decline</button>
+        </div>
 
-<script>
-function showTab(tab) {
-  document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
-  document.getElementById(tab).classList.remove("hidden");
-}
-</script>
+        <div id="drawer-explain" class="drawer">
+          <div class="tiny"><b>Rationale (human-readable):</b></div>
+          <ul class="tiny" style="margin:8px 0 0 18px; line-height:1.55;">
+            <li><b>IOB present</b> (0.8u) → reduces safe correction size to avoid stacking.</li>
+            <li><b>Sleep deficit</b> (6.1h) → raises variability and delays sensitivity shifts.</li>
+            <li><b>Activity low today</b> vs baseline → predicted sensitivity slightly lower now, higher later.</li>
+            <li><b>Meal certainty not confirmed</b> → recommends logging scan/search first.</li>
+            <li><b>Trend slope</b> is moderate and still inside safe band.</li>
+          </ul>
+          <div class="pill">Override always available · Logs actions for clinician review</div>
+        </div>
 
+        <div id="drawer-toast" class="drawer">
+          <div class="tiny"><b>Logged.</b> Decision stored in History for provider review.</div>
+        </div>
+      </div>
+
+      <div class="sectionLabel">Glucose Trace</div>
+      <div class="card soft">
+        <div class="cardHeader">
+          <h3>2-Hour Trace + Projection</h3>
+          <div class="hint">gridlines · axes</div>
+        </div>
+        <div class="chartWrap tall">
+          <canvas id="ch-glucoseNow"></canvas>
+        </div>
+        <div class="tiny" style="margin-top:10px;">
+          Sources: CGM (demo), watch activity/sleep (demo), user entries (meal, symptoms, hydration).
+        </div>
+      </div>
+
+      <div class="sectionLabel">Vitals & Context</div>
+      <div class="card">
+        <div class="cardHeader">
+          <h3>Live Context</h3>
+          <div class="hint">designed for fast understanding</div>
+        </div>
+
+        <div class="vitalGrid">
+          <div class="vital">
+            <div class="t">Heart Rate</div>
+            <div class="v">98 bpm</div>
+            <div class="s">↑ mild vs baseline (82)</div>
+          </div>
+          <div class="vital">
+            <div class="t">Steps</div>
+            <div class="v">12,430</div>
+            <div class="s">above avg · +2.1k</div>
+          </div>
+          <div class="vital">
+            <div class="t">Sleep</div>
+            <div class="v">6.1 hrs</div>
+            <div class="s">below target · variability ↑</div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <div class="card soft mini" style="flex:1; min-width: 180px;">
+            <div class="cardHeader"><h3 style="margin:0;">HR Trend</h3><div class="hint">today</div></div>
+            <div class="chartWrap"><canvas id="ch-hrMini"></canvas></div>
+          </div>
+          <div class="card soft mini" style="flex:1; min-width: 180px;">
+            <div class="cardHeader"><h3 style="margin:0;">Steps Trend</h3><div class="hint">today</div></div>
+            <div class="chartWrap"><canvas id="ch-stepsMini"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sectionLabel">Clinical Oversight</div>
+      <div class="card">
+        <div class="cardHeader">
+          <h3>Share with Healthcare Provider</h3>
+          <div class="hint">read-only report</div>
+        </div>
+        <div class="subtle">
+          Generate a clinician-friendly summary: trends, time-in-range, decisions + reasoning, and event timeline.
+        </div>
+        <div class="btnRow">
+          <button class="btn primary" onclick="toggle('drawer-report')">Generate Report</button>
+          <button class="btn" onclick="toggle('drawer-report')">Preview</button>
+        </div>
+        <div id="drawer-report" class="drawer">
+          <div class="tiny"><b>Report Preview (demo)</b></div>
+          <ul class="tiny" style="margin:8px 0 0 18px; line-height:1.55;">
+            <li>7-day glucose trend + variability</li>
+            <li>Time-in-range donut + high/low breakdown</li>
+            <li>Decision history (approve/decline + rationale)</li>
+            <li>Meals, hydration, symptoms, activity context</li>
+          </ul>
+          <div class="pill">Designed for quick review · teen-friendly summary included</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSIGHTS -->
+    <section id="scr-insights" class="screen screenScroll">
+      <div class="sectionLabel">Weekly Intelligence</div>
+
+      <div class="card soft">
+        <div class="cardHeader">
+          <h3>7-Day Glucose Trend</h3>
+          <div class="hint">mg/dL · tap points</div>
+        </div>
+        <div class="chartWrap tall">
+          <canvas id="ch-week"></canvas>
+        </div>
+        <div class="tiny" style="margin-top:10px;">
+          Includes avg, highs, lows to avoid “one squiggly line” ambiguity.
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <div class="card" style="flex:1; min-width: 200px;">
+          <div class="cardHeader">
+            <h3>Time in Range</h3>
+            <div class="hint">70–180</div>
+          </div>
+          <div class="chartWrap">
+            <canvas id="ch-tir" style="height:230px !important;"></canvas>
+          </div>
+          <div class="tiny" style="margin-top:10px;">Muted clinical palette (not loud).</div>
+        </div>
+
+        <div class="card" style="flex:1; min-width: 200px;">
+          <div class="cardHeader">
+            <h3>Variability</h3>
+            <div class="hint">7-day stats</div>
+          </div>
+          <div class="subtle">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Avg glucose</span><b>136 mg/dL</b></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Std dev</span><b>38</b></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>CV</span><b>28%</b></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>Estimated A1C</span><b>~6.7%</b></div>
+          </div>
+          <div class="pill">Goal: CV &lt; 36% · safer stability</div>
+        </div>
+      </div>
+
+      <div class="sectionLabel">Correlations</div>
+      <div class="card soft">
+        <div class="cardHeader">
+          <h3>Glucose vs Sleep vs Activity</h3>
+          <div class="hint">multi-axis</div>
+        </div>
+        <div class="chartWrap tall">
+          <canvas id="ch-corr"></canvas>
+        </div>
+        <div class="tiny" style="margin-top:10px;">
+          Shows the “story”: less sleep → higher variability; activity shifts sensitivity.
+        </div>
+      </div>
+
+      <div class="sectionLabel">Risk & Drivers</div>
+      <div class="row">
+        <div class="card" style="flex:1; min-width: 200px;">
+          <div class="cardHeader">
+            <h3>Hypo Risk Forecast</h3>
+            <div class="hint">next 6h</div>
+          </div>
+          <div class="chartWrap">
+            <canvas id="ch-risk"></canvas>
+          </div>
+          <div class="tiny" style="margin-top:10px;">Tap points to view risk %.</div>
+        </div>
+
+        <div class="card" style="flex:1; min-width: 200px;">
+          <div class="cardHeader">
+            <h3>Top Drivers</h3>
+            <div class="hint">ranked</div>
+          </div>
+
+          <div class="list">
+            <div class="item">
+              <div class="left">
+                <div class="tag">Sleep</div>
+                <b>Short sleep window</b>
+                <div class="tiny">6.1h detected → variability + resistance pattern</div>
+              </div>
+              <div class="right">
+                <div class="big">+18</div>
+                <div class="tiny">impact</div>
+              </div>
+            </div>
+
+            <div class="item">
+              <div class="left">
+                <div class="tag">Meal</div>
+                <b>Carbs not confirmed</b>
+                <div class="tiny">Scan/search missing → dosing guidance conservative</div>
+              </div>
+              <div class="right">
+                <div class="big">+14</div>
+                <div class="tiny">impact</div>
+              </div>
+            </div>
+
+            <div class="item">
+              <div class="left">
+                <div class="tag">Stress</div>
+                <b>Elevated HR baseline</b>
+                <div class="tiny">Sustained HR ↑ → cortisol-linked rises</div>
+              </div>
+              <div class="right">
+                <div class="big">+9</div>
+                <div class="tiny">impact</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pill">Designed to be readable for teens + useful for clinicians</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOD -->
+    <section id="scr-food" class="screen screenScroll">
+      <div class="sectionLabel">Food Intelligence</div>
+
+      <div class="card">
+        <div class="cardHeader">
+          <h3>Scan or Search</h3>
+          <div class="hint">fast logging</div>
+        </div>
+
+        <div class="subtle">
+          Scan estimates carbs + calories; search logs quickly. Entries directly improve recommendations.
+        </div>
+
+        <div class="scanBox">Scan Preview Area (demo)</div>
+
+        <div class="btnRow">
+          <button class="btn primary" onclick="toggle('drawer-scan')">Run Scan</button>
+          <button class="btn" onclick="toggle('drawer-scan')">Add as Meal</button>
+        </div>
+
+        <div id="drawer-scan" class="drawer">
+          <div class="tiny"><b>Scan Result (demo):</b> “Chicken Teriyaki Bowl”</div>
+          <ul class="tiny" style="margin:8px 0 0 18px; line-height:1.55;">
+            <li>Estimated carbs: <b>62g</b></li>
+            <li>Calories: <b>640</b> · Protein: <b>28g</b> · Fat: <b>18g</b></li>
+            <li>GI estimate: <b>moderate</b> · Suggestion: <b>split timing consideration</b></li>
+          </ul>
+          <div class="pill">Meal certainty: High · Scan confidence: 0.82</div>
+        </div>
+
+        <div class="sectionLabel" style="margin-top:14px;">Search</div>
+        <input class="input" placeholder="Search foods (pizza slice, granola bar, apple...)" />
+
+        <div class="sectionLabel" style="margin-top:14px;">Predicted Impact</div>
+        <div class="card soft">
+          <div class="cardHeader">
+            <h3>Glucose Projection</h3>
+            <div class="hint">if meal logged</div>
+          </div>
+          <div class="chartWrap tall">
+            <canvas id="ch-food"></canvas>
+          </div>
+          <div class="tiny" style="margin-top:10px;">
+            Guidance-only. Users approve/decline decisions and can share report with provider.
+          </div>
+        </div>
+
+        <div class="sectionLabel">Recent Meals</div>
+        <div class="list">
+          <div class="item">
+            <div class="left">
+              <div class="tag">Logged</div>
+              <b>Granola bar</b>
+              <div class="tiny">Carbs 24g · 10:18 AM · scan confidence 0.74</div>
+            </div>
+            <div class="right">
+              <div class="big">+28</div>
+              <div class="tiny">mg/dL</div>
+            </div>
+          </div>
+
+          <div class="item">
+            <div class="left">
+              <div class="tag">Logged</div>
+              <b>Chicken teriyaki bowl</b>
+              <div class="tiny">Carbs 62g · 1:06 PM · split timing suggested</div>
+            </div>
+            <div class="right">
+              <div class="big">+52</div>
+              <div class="tiny">mg/dL</div>
+            </div>
+          </div>
+
+          <div class="item">
+            <div class="left">
+              <div class="tag">Uncertain</div>
+              <b>Sports drink</b>
+              <div class="tiny">Carbs unknown · flagged for follow-up</div>
+            </div>
+            <div class="right">
+              <div class="big">?</div>
+              <div class="tiny">impact</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pill">Built to reduce workload: scan + defaults + minimal manual entry</div>
+      </div>
+    </section>
+
+    <!-- LOG -->
+    <section id="scr-log" class="screen screenScroll">
+      <div class="sectionLabel">Daily Log</div>
+
+      <div class="card">
+        <div class="cardHeader">
+          <h3>Today at a Glance</h3>
+          <div class="hint">dense, organized</div>
+        </div>
+
+        <div class="row">
+          <div class="card soft mini" style="flex:1; min-width: 180px;">
+            <div class="cardHeader"><h3 style="margin:0;">Glucose</h3><div class="hint">today</div></div>
+            <div class="chartWrap"><canvas id="ch-glucoseMini"></canvas></div>
+          </div>
+
+          <div class="card soft mini" style="flex:1; min-width: 180px;">
+            <div class="cardHeader"><h3 style="margin:0;">Sleep</h3><div class="hint">week</div></div>
+            <div class="chartWrap"><canvas id="ch-sleepMini"></canvas></div>
+          </div>
+        </div>
+
+        <div class="pill">Tap actions are simulated · demo shows what a real system would track</div>
+      </div>
+
+      <div class="sectionLabel">Event Timeline</div>
+      <div class="card">
+        <div class="list">
+          <div class="item">
+            <div class="left">
+              <div class="tag">Decision</div>
+              <b>Recommendation approved</b>
+              <div class="tiny">Held correction due to IOB + sleep deficit · 2:22 PM</div>
+            </div>
+            <div class="right">
+              <div class="big">0.81</div>
+              <div class="tiny">confidence</div>
+            </div>
+          </div>
+
+          <div class="item">
+            <div class="left">
+              <div class="tag">Meal</div>
+              <b>Teriyaki bowl logged</b>
+              <div class="tiny">Carbs 62g · scan · 1:06 PM</div>
+            </div>
+            <div class="right">
+              <div class="big">62g</div>
+              <div class="tiny">carbs</div>
+            </div>
+          </div>
+
+          <div class="item">
+            <div class="left">
+              <div class="tag">Manual</div>
+              <b>Hydration low</b>
+              <div class="tiny">“forgot water at school” · 11:40 AM</div>
+            </div>
+            <div class="right">
+              <div class="big">note</div>
+              <div class="tiny">entry</div>
+            </div>
+          </div>
+
+          <div class="item">
+            <div class="left">
+              <div class="tag">Symptom</div>
+              <b>Headache</b>
+              <div class="tiny">Possible correlation with sleep deficit · 9:12 AM</div>
+            </div>
+            <div class="right">
+              <div class="big">mild</div>
+              <div class="tiny">severity</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sectionLabel">Quick Manual Inputs</div>
+      <div class="card">
+        <div class="subtle">Optional entries only — designed to avoid long forms.</div>
+        <div class="row" style="margin-top:10px;">
+          <input class="input" style="flex:1; min-width: 160px;" placeholder="Illness / fever (optional)" />
+          <input class="input" style="flex:1; min-width: 160px;" placeholder="Hydration note (optional)" />
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <input class="input" style="flex:1; min-width: 160px;" placeholder="Medication change (optional)" />
+          <input class="input" style="flex:1; min-width: 160px;" placeholder="Menstrual cycle (optional)" />
+        </div>
+        <div class="pill">Goal: most days require zero typing</div>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="scr-profile" class="screen screenScroll">
+      <div class="sectionLabel">Profile</div>
+
+      <div class="card">
+        <div class="cardHeader">
+          <h3>Patient Snapshot</h3>
+          <div class="hint">full record view</div>
+        </div>
+
+        <div class="row">
+          <div class="card soft" style="flex:1; min-width: 180px;">
+            <div class="tiny">Name</div>
+            <div style="font-weight:950; font-size:16px;">Demo Patient</div>
+            <div class="tiny">Age 16 · Type 1 Diabetes</div>
+          </div>
+          <div class="card soft" style="flex:1; min-width: 180px;">
+            <div class="tiny">Devices</div>
+            <div style="font-weight:950;">CGM + Watch</div>
+            <div class="tiny">Sync: every 5 min (demo)</div>
+          </div>
+        </div>
+
+        <div class="sectionLabel" style="margin-top:14px;">Core Parameters</div>
+        <div class="row">
+          <div class="card soft" style="flex:1; min-width: 170px;">
+            <div class="tiny">Weight</div>
+            <div style="font-weight:950; font-size:18px;">140 lb</div>
+            <div class="tiny">editable</div>
+          </div>
+          <div class="card soft" style="flex:1; min-width: 170px;">
+            <div class="tiny">A1C</div>
+            <div style="font-weight:950; font-size:18px;">7.2%</div>
+            <div class="tiny">last lab: 6 weeks</div>
+          </div>
+          <div class="card soft" style="flex:1; min-width: 170px;">
+            <div class="tiny">Target Range</div>
+            <div style="font-weight:950; font-size:18px;">70–180</div>
+            <div class="tiny">mg/dL</div>
+          </div>
+        </div>
+
+        <div class="sectionLabel" style="margin-top:14px;">Insulin Profile</div>
+        <div class="row">
+          <div class="card soft" style="flex:1; min-width: 190px;">
+            <div class="tiny">Carb Ratio</div>
+            <div style="font-weight:950; font-size:18px;">1u : 10g</div>
+            <div class="tiny">time-of-day adjustments supported</div>
+          </div>
+          <div class="card soft" style="flex:1; min-width: 190px;">
+            <div class="tiny">Sensitivity (ISF)</div>
+            <div style="font-weight:950; font-size:18px;">1u ≈ 45 mg/dL</div>
+            <div class="tiny">estimated from patterns</div>
+          </div>
+        </div>
+
+        <div class="sectionLabel" style="margin-top:14px;">Tracked Trends</div>
+        <div class="row">
+          <div class="card mini" style="flex:1; min-width: 200px;">
+            <div class="cardHeader"><h3 style="margin:0;">Steps (7d)</h3><div class="hint">watch</div></div>
+            <div class="chartWrap"><canvas id="ch-steps7"></canvas></div>
+          </div>
+          <div class="card mini" style="flex:1; min-width: 200px;">
+            <div class="cardHeader"><h3 style="margin:0;">Sleep (7d)</h3><div class="hint">watch</div></div>
+            <div class="chartWrap"><canvas id="ch-sleep7"></canvas></div>
+          </div>
+        </div>
+
+        <div class="sectionLabel" style="margin-top:14px;">Manual Factors</div>
+        <div class="subtle">Optional — only when relevant (keeps workload low).</div>
+        <div class="row" style="margin-top:10px;">
+          <input class="input" style="flex:1; min-width: 160px;" placeholder="Illness / fever history" />
+          <input class="input" style="flex:1; min-width: 160px;" placeholder="Hypoglycemia episodes" />
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <input class="input" style="flex:1; min-width: 160px;" placeholder="Hydration level (optional)" />
+          <input class="input" style="flex:1; min-width: 160px;" placeholder="Alcohol (optional)" />
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <input class="input" style="flex:1; min-width: 160px;" placeholder="Menstrual cycle (optional)" />
+          <input class="input" style="flex:1; min-width: 160px;" placeholder="Medication changes" />
+        </div>
+
+        <div class="sectionLabel" style="margin-top:14px;">Safety & Trust</div>
+        <div class="card soft">
+          <div class="subtle">
+            DIAMETES provides <b>guidance</b> with transparent reasoning and user control.
+            Decisions can be shared as a clinician report for oversight.
+          </div>
+          <div class="pill">Support tool · not a replacement for medical care</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NAV -->
+    <nav>
+      <div class="navBtn active" onclick="showTab('dashboard', this)">Dashboard</div>
+      <div class="navBtn" onclick="showTab('insights', this)">Insights</div>
+      <div class="navBtn" onclick="showTab('food', this)">Food</div>
+      <div class="navBtn" onclick="showTab('log', this)">Log</div>
+      <div class="navBtn" onclick="showTab('profile', this)">Profile</div>
+    </nav>
+  </div>
+
+  <script>
+    // ---------- Stable nav (works everywhere) ----------
+    function showTab(name, el){
+      const map = {
+        dashboard: 'scr-dashboard',
+        insights: 'scr-insights',
+        food: 'scr-food',
+        log: 'scr-log',
+        profile: 'scr-profile'
+      };
+
+      Object.values(map).forEach(id => document.getElementById(id).classList.remove('active'));
+      document.getElementById(map[name]).classList.add('active');
+
+      document.querySelectorAll('.navBtn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+
+      window.scrollTo(0,0);
+    }
+
+    function toggle(id){
+      const d = document.getElementById(id);
+      d.classList.toggle('show');
+    }
+
+    function logDecision(which){
+      const t = document.getElementById('drawer-toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1400);
+    }
+
+    // ---------- Chart styling ----------
+    const gridColor = 'rgba(182,203,228,.16)';
+    const tickColor = 'rgba(182,203,228,.78)';
+
+    function lineOpts(xTitle, yTitle){
+      return {
+        responsive:true,
+        maintainAspectRatio:false,
+        animation:{ duration: 850, easing:'easeOutQuart' },
+        interaction:{ mode:'nearest', intersect:false },
+        plugins:{
+          legend:{ labels:{ color: tickColor, boxWidth: 12, boxHeight: 12, usePointStyle:true } },
+          tooltip:{
+            enabled:true,
+            backgroundColor:'rgba(5,11,19,.92)',
+            borderColor:'rgba(255,255,255,.10)',
+            borderWidth:1,
+            titleColor:'#eaf2ff',
+            bodyColor:'#cfe0f7'
+          }
+        },
+        scales:{
+          x:{ grid:{ color:gridColor }, ticks:{ color:tickColor }, title:{ display:true, text:xTitle, color:tickColor } },
+          y:{ grid:{ color:gridColor }, ticks:{ color:tickColor }, title:{ display:true, text:yTitle, color:tickColor } }
+        }
+      };
+    }
+
+    function donutOpts(){
+      return {
+        responsive:true,
+        maintainAspectRatio:false,
+        animation:{ duration: 900, easing:'easeOutQuart' },
+        plugins:{
+          legend:{ labels:{ color: tickColor, boxWidth: 14, boxHeight: 14 } },
+          tooltip:{
+            enabled:true,
+            backgroundColor:'rgba(5,11,19,.92)',
+            borderColor:'rgba(255,255,255,.10)',
+            borderWidth:1,
+            titleColor:'#eaf2ff',
+            bodyColor:'#cfe0f7'
+          }
+        },
+        cutout:'68%'
+      };
+    }
+
+    // Init charts after load (safe for embeds)
+    window.addEventListener('load', () => {
+      // Dashboard main glucose
+      new Chart(document.getElementById('ch-glucoseNow'),{
+        type:'line',
+        data:{
+          labels:['-120m','-90m','-60m','-30m','Now','+30m'],
+          datasets:[
+            {
+              label:'Glucose',
+              data:[118, 122, 131, 137, 142, 154],
+              borderColor:getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
+              backgroundColor:'rgba(105,167,255,.10)',
+              tension:.35,
+              fill:true,
+              pointRadius:3,
+              pointHoverRadius:5
+            },
+            {
+              label:'Upper band (180)',
+              data:[180,180,180,180,180,180],
+              borderColor:'rgba(123,232,212,.22)',
+              borderDash:[6,6],
+              pointRadius:0
+            },
+            {
+              label:'Lower band (70)',
+              data:[70,70,70,70,70,70],
+              borderColor:'rgba(255,191,125,.20)',
+              borderDash:[6,6],
+              pointRadius:0
+            }
+          ]
+        },
+        options: lineOpts('Time','mg/dL')
+      });
+
+      // HR mini
+      new Chart(document.getElementById('ch-hrMini'),{
+        type:'line',
+        data:{
+          labels:['8a','10a','12p','2p','4p','6p'],
+          datasets:[{
+            label:'bpm',
+            data:[82, 88, 94, 98, 92, 88],
+            borderColor:'rgba(156,198,255,.95)',
+            backgroundColor:'rgba(156,198,255,.10)',
+            tension:.35,
+            fill:true,
+            pointRadius:2
+          }]
+        },
+        options: lineOpts('Time','bpm')
+      });
+
+      // Steps mini
+      new Chart(document.getElementById('ch-stepsMini'),{
+        type:'line',
+        data:{
+          labels:['8a','10a','12p','2p','4p','6p'],
+          datasets:[{
+            label:'steps',
+            data:[900, 2600, 5200, 7800, 10100, 12430],
+            borderColor:'rgba(123,232,212,.85)',
+            backgroundColor:'rgba(123,232,212,.10)',
+            tension:.35,
+            fill:true,
+            pointRadius:2
+          }]
+        },
+        options: lineOpts('Time','steps')
+      });
+
+      // Insights week
+      new Chart(document.getElementById('ch-week'),{
+        type:'line',
+        data:{
+          labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+          datasets:[
+            {
+              label:'Avg',
+              data:[132, 140, 128, 146, 138, 134, 136],
+              borderColor:'rgba(105,167,255,.95)',
+              backgroundColor:'rgba(105,167,255,.10)',
+              tension:.35,
+              fill:true,
+              pointRadius:3
+            },
+            {
+              label:'Highs',
+              data:[180, 192, 170, 205, 188, 176, 182],
+              borderColor:'rgba(255,191,125,.90)',
+              backgroundColor:'rgba(255,191,125,.06)',
+              tension:.30,
+              fill:false,
+              pointRadius:2
+            },
+            {
+              label:'Lows',
+              data:[78, 72, 84, 70, 75, 80, 77],
+              borderColor:'rgba(255,126,147,.78)',
+              backgroundColor:'rgba(255,126,147,.06)',
+              tension:.25,
+              fill:false,
+              pointRadius:2
+            }
+          ]
+        },
+        options: lineOpts('Day','mg/dL')
+      });
+
+      // TIR donut
+      new Chart(document.getElementById('ch-tir'),{
+        type:'doughnut',
+        data:{
+          labels:['In Range','High','Low'],
+          datasets:[{
+            data:[71, 21, 8],
+            backgroundColor:[
+              'rgba(123,232,212,.85)',
+              'rgba(255,191,125,.85)',
+              'rgba(255,126,147,.82)'
+            ],
+            borderColor:'rgba(0,0,0,0)',
+            hoverOffset:6
+          }]
+        },
+        options: donutOpts()
+      });
+
+      // Correlation multi-axis
+      new Chart(document.getElementById('ch-corr'),{
+        type:'line',
+        data:{
+          labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+          datasets:[
+            {
+              label:'Avg glucose (mg/dL)',
+              data:[132,140,128,146,138,134,136],
+              borderColor:'rgba(105,167,255,.95)',
+              backgroundColor:'rgba(105,167,255,.10)',
+              tension:.35,
+              fill:true,
+              pointRadius:3
+            },
+            {
+              label:'Sleep (hrs)',
+              data:[6.0,5.8,7.2,6.1,6.3,7.8,7.1],
+              borderColor:'rgba(156,198,255,.90)',
+              yAxisID:'y2',
+              tension:.35,
+              fill:false,
+              pointRadius:2
+            },
+            {
+              label:'Activity index',
+              data:[54,48,70,60,62,80,74],
+              borderColor:'rgba(123,232,212,.70)',
+              yAxisID:'y3',
+              tension:.35,
+              fill:false,
+              pointRadius:2
+            }
+          ]
+        },
+        options:{
+          ...lineOpts('Day','mg/dL'),
+          scales:{
+            x:{ grid:{color:gridColor}, ticks:{color:tickColor}, title:{display:true,text:'Day',color:tickColor}},
+            y:{ grid:{color:gridColor}, ticks:{color:tickColor}, title:{display:true,text:'mg/dL',color:tickColor}},
+            y2:{
+              position:'right',
+              grid:{ drawOnChartArea:false },
+              ticks:{ color:'rgba(156,198,255,.90)' },
+              title:{ display:true, text:'Sleep (hrs)', color:'rgba(156,198,255,.90)' }
+            },
+            y3:{
+              position:'right',
+              grid:{ drawOnChartArea:false },
+              ticks:{ color:'rgba(123,232,212,.75)' },
+              title:{ display:true, text:'Activity', color:'rgba(123,232,212,.75)' },
+              offset:true
+            }
+          }
+        }
+      });
+
+      // Risk forecast
+      new Chart(document.getElementById('ch-risk'),{
+        type:'line',
+        data:{
+          labels:['Now','+1h','+2h','+3h','+4h','+5h','+6h'],
+          datasets:[{
+            label:'Hypo risk (%)',
+            data:[8,10,12,9,7,6,7],
+            borderColor:'rgba(255,126,147,.88)',
+            backgroundColor:'rgba(255,126,147,.10)',
+            tension:.35,
+            fill:true,
+            pointRadius:3
+          }]
+        },
+        options: lineOpts('Time','Risk %')
+      });
+
+      // Food impact
+      new Chart(document.getElementById('ch-food'),{
+        type:'line',
+        data:{
+          labels:['Now','+15m','+30m','+45m','+60m','+90m','+120m'],
+          datasets:[
+            {
+              label:'Projected',
+              data:[142,150,162,175,182,168,148],
+              borderColor:'rgba(255,191,125,.90)',
+              backgroundColor:'rgba(255,191,125,.10)',
+              tension:.35,
+              fill:true,
+              pointRadius:3
+            },
+            {
+              label:'If split timing used',
+              data:[142,148,155,162,160,150,138],
+              borderColor:'rgba(105,167,255,.95)',
+              backgroundColor:'rgba(105,167,255,.06)',
+              tension:.35,
+              fill:false,
+              pointRadius:2
+            }
+          ]
+        },
+        options: lineOpts('Time','mg/dL')
+      });
+
+      // Log minis
+      new Chart(document.getElementById('ch-glucoseMini'),{
+        type:'line',
+        data:{
+          labels:['8a','10a','12p','2p','4p','6p','8p'],
+          datasets:[{
+            label:'mg/dL',
+            data:[112,126,131,142,154,146,138],
+            borderColor:'rgba(105,167,255,.95)',
+            backgroundColor:'rgba(105,167,255,.10)',
+            tension:.35,
+            fill:true,
+            pointRadius:2
+          }]
+        },
+        options: lineOpts('Time','mg/dL')
+      });
+
+      new Chart(document.getElementById('ch-sleepMini'),{
+        type:'line',
+        data:{
+          labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+          datasets:[{
+            label:'hrs',
+            data:[6.0,5.8,7.2,6.1,6.3,7.8,7.1],
+            borderColor:'rgba(156,198,255,.90)',
+            backgroundColor:'rgba(156,198,255,.10)',
+            tension:.35,
+            fill:true,
+            pointRadius:2
+          }]
+        },
+        options: lineOpts('Day','hrs')
+      });
+
+      // Profile minis
+      new Chart(document.getElementById('ch-steps7'),{
+        type:'line',
+        data:{
+          labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+          datasets:[{
+            label:'steps',
+            data:[8200,7400,10100,8900,12430,13800,11900],
+            borderColor:'rgba(123,232,212,.85)',
+            backgroundColor:'rgba(123,232,212,.10)',
+            tension:.35,
+            fill:true,
+            pointRadius:2
+          }]
+        },
+        options: lineOpts('Day','steps')
+      });
+
+      new Chart(document.getElementById('ch-sleep7'),{
+        type:'line',
+        data:{
+          labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+          datasets:[{
+            label:'hrs',
+            data:[6.0,5.8,7.2,6.1,6.3,7.8,7.1],
+            borderColor:'rgba(156,198,255,.90)',
+            backgroundColor:'rgba(156,198,255,.10)',
+            tension:.35,
+            fill:true,
+            pointRadius:2
+          }]
+        },
+        options: lineOpts('Day','hrs')
+      });
+    });
+  </script>
 </body>
 </html>
