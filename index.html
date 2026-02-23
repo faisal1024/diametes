@@ -1,0 +1,129 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIAMETES</title>
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(180deg,#0c1324,#121c36);
+  color: white;
+}
+header {
+  padding: 20px;
+  font-size: 28px;
+  font-weight: bold;
+}
+header span.light {
+  color: #5cc8ff;
+}
+section {
+  min-height: 100vh;
+  padding: 20px;
+}
+.card {
+  background: rgba(255,255,255,0.05);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  background: #0b1220;
+  padding: 12px 0;
+}
+.nav button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 14px;
+}
+.hidden {
+  display: none;
+}
+</style>
+</head>
+<body>
+
+<header>
+DIA<span class="light">ME</span>TES
+</header>
+
+<section id="dashboard">
+<div class="card">
+<h2>Glucose</h2>
+<p>Current: 118 mg/dL</p>
+<p>Trend: Stable</p>
+<p>Hypoglycemia Risk: Low</p>
+</div>
+
+<div class="card">
+<h2>Decision Support</h2>
+<p>Recommendation: Monitor, no correction needed.</p>
+<button>Approve</button>
+<button>Explain</button>
+<button>Decline</button>
+</div>
+</section>
+
+<section id="insights" class="hidden">
+<div class="card">
+<h2>7-Day Trend</h2>
+<p>Average: 121 mg/dL</p>
+</div>
+<div class="card">
+<h2>Sleep vs Glucose</h2>
+<p>Correlation detected: +12 mg/dL after poor sleep</p>
+</div>
+</section>
+
+<section id="food" class="hidden">
+<div class="card">
+<h2>Food Intelligence</h2>
+<p>Scan or Search Food</p>
+<p>Predicted Impact: Moderate rise</p>
+</div>
+</section>
+
+<section id="activity" class="hidden">
+<div class="card">
+<h2>Activity Log</h2>
+<p>Steps: 12,432</p>
+<p>Sleep: 7.2 hrs</p>
+<p>Carbs: 184g</p>
+</div>
+</section>
+
+<section id="profile" class="hidden">
+<div class="card">
+<h2>Profile</h2>
+<p>Age: 15</p>
+<p>Weight: 118 lbs</p>
+<p>Target Range: 80–150 mg/dL</p>
+</div>
+</section>
+
+<div class="nav">
+<button onclick="showTab('dashboard')">Dashboard</button>
+<button onclick="showTab('insights')">Insights</button>
+<button onclick="showTab('food')">Food</button>
+<button onclick="showTab('activity')">Activity</button>
+<button onclick="showTab('profile')">Profile</button>
+</div>
+
+<script>
+function showTab(tab) {
+  document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
+  document.getElementById(tab).classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>
